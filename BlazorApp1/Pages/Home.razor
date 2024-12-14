@@ -1,0 +1,108 @@
+﻿@page "/"
+
+@using BlazorApp1.Services
+@inject AppState appState
+@inject ProductStorage productStorage
+
+<PageTitle>Home</PageTitle>
+
+@if (appState.IsAuthenticated)
+{
+    <h1>Hello, @appState.Username (@(appState.IsAdmin ? "admin" : "user"))</h1>
+
+
+    if (appState.IsAdmin)
+    {
+        <h1>Add product</h1>
+
+        <form method="post">
+            <div class="form-group">
+                <label for="productName">Product Name</label>
+                <input type="text" id="productName" name="productName" class="form-control" @bind="productName" />
+                @if (!string.IsNullOrEmpty(validationError))
+                {
+                    <small class="text-danger">@validationError</small>
+                }
+            </div>
+
+            <div class="form-group">
+                <label for="productQuantity">Product Quantity</label>
+                <input type="number" id="productQuantity" name="productQuantity" class="form-control" @bind="productQuantity" />
+                @if (quantityError != null)
+                {
+                    <small class="text-danger">@quantityError</small>
+                }
+            </div>
+
+            <div class="form-group">
+                <label for="productPrice">Product Price</label>
+                <input type="number" step="0.01" id="productPrice" name="productPrice" class="form-control" @bind="productPrice" />
+                @if (priceError != null)
+                {
+                    <small class="text-danger">@priceError</small>
+                }
+            </div>
+
+            <button type="button" class="btn btn-primary" @onclick="SubmitForm">Submit</button>
+        </form>
+    }
+    else
+    {
+        <h2>This is the main page, if you want to add a product you must be authorized with admin status!</h2>
+    }
+
+    @if (isAdded)
+    {
+        <p style="color: green;">Product added successfully! Product name: @productName Product quantity: @productQuantity Product price: @productPrice</p>
+    }
+}
+else
+{
+    <h1>You need to login!</h1>
+}
+
+@code {
+    private string productName;
+    private int productQuantity;
+    private decimal productPrice;
+    private bool isAdded;
+    private string validationError;
+    private string quantityError;
+    private string priceError;
+
+    private void SubmitForm()
+    {
+        validationError = null;
+        quantityError = null;
+        priceError = null;
+
+        if (string.IsNullOrWhiteSpace(productName))
+        {
+            validationError = "Product name is required.";
+            return;
+        }
+
+        if (productQuantity <= 0)
+        {
+            quantityError = "Quantity must be greater than 0.";
+            return;
+        }
+
+        if (productPrice <= 0)
+        {
+            priceError = "Price must be greater than 0.";
+            return;
+        }
+
+        productStorage.AddProduct(new Models.Product
+        {
+            Name = productName,
+            Quantity = productQuantity,
+            Price = productPrice
+        });
+
+        isAdded = true;
+
+        Console.WriteLine($"Product Name: {productName}, Quantity: {productQuantity}, Price: {productPrice}");
+    }
+}

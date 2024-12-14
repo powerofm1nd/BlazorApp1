@@ -1,0 +1,27 @@
+﻿@page "/logout"
+@using BlazorApp1.Services
+@inject AppState appState
+@inject NavigationManager NavigationManager
+
+@if (appState.IsAuthenticated)
+{
+    appState.ClearState();
+}
+
+<h1>Logging out...</h1>
+
+@code 
+{
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (appState.IsAuthenticated)
+            {
+                appState.ClearState();
+            }
+
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+}

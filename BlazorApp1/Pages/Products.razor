@@ -1,0 +1,62 @@
+﻿@page "/products"
+
+@using BlazorApp1.Models
+@using BlazorApp1.Services
+@inject AppState appState
+@inject ProductStorage productStorage
+@inject BasketStorage basketStorage
+
+<h3>Products</h3>
+
+<div>
+    <label>Sort by price: </label>
+    <select @onchange="ChangeSortOrder">
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+    </select>
+</div>
+
+<table>
+    <tr>
+        <td>Name</td>
+        <td>Quantity</td>
+        <td>Price</td>
+        <td>Delete</td>
+        <td>Add to basket</td>
+    </tr>
+    @foreach (var product in SortedProducts)
+    {
+        <tr>
+            <td>@product.Name</td>
+            <td>@product.Quantity</td>
+            <td>@product.Price</td>
+
+            @if (appState.IsAuthenticated && appState.IsAdmin) { <td><button @onclick="() => RemoveProduct(product.Name)">Remove</button></td> }
+            @if (appState.IsAuthenticated) { <td><button @onclick="() => AddToBasket(product.Name)">Add to basket</button></td> }
+        </tr>
+    }
+</table>
+
+@code {
+    private string sortOrder = "asc";
+    private IEnumerable<Product> SortedProducts =>
+        sortOrder == "asc"
+            ? productStorage.GetProducts().OrderBy(p => p.Price)
+            : productStorage.GetProducts().OrderByDescending(p => p.Price);
+
+    private void ChangeSortOrder(ChangeEventArgs e)
+    {
+        sortOrder = e.Value?.ToString() ?? "asc";
+    }
+
+    private void RemoveProduct(string name)
+    {
+        productStorage.RemoveProductByName(name);
+    }
+
+    private void AddToBasket(string name)
+    {
+        var product = productStorage.TakeProductByName(name);
+        basketStorage.AddProduct(product);
+    }
+}
